@@ -17,8 +17,6 @@ pie
 
 
 
-
-
 ```flow
 a=>start: 闹钟响起
 b=>operation: 与床板分离
