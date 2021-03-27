@@ -21,23 +21,6 @@
 3. 使用Sagemaker Studio **完成数据预处理与特征工程：**1）探索相关性；2）缩小特征值范围；3）将海量数据分为几批进行预处理，以避免服务器内存溢出；4）数据清理，滑动窗口清除无效数据；5）过滤数据，解决正负样本不平衡的问题；
 4. 使用Sagemaker+XGboost训练了6个预测模型，分别覆盖提前5、10、20、30、40、50分钟，演示实验结果。
 
-
-```bash
-Mermaid stateDiagram-v2
-    [*] --> ETL数据标注
-    ETL数据标注 --> 数据处理特征工程      
-    数据处理特征工程 --> 算法选择构建模型
-    算法选择构建模型 --> 模型训练
-    模型训练 --> 评估Evaluation
-    评估Evaluation -->超参数优化(反复调参试错)
-    超参数优化(反复调参试错) --> 模型训练
-    评估Evaluation --> 部署型线上推理
-    部署型线上推理 --> 持续监控数据收集    
-    持续监控数据收集 --> ETL数据标注
-    持续监控数据收集 --> [*]
-```
-
-
 ```mermaid
 stateDiagram-v2
     [*] --> ETL数据标注
@@ -53,7 +36,7 @@ stateDiagram-v2
     持续监控数据收集 --> [*]
 ```
 
-<img src="https://raw.githubusercontent.com/liangyimingcom/storage/master/uPic/image-20210327221754657.png" alt="image-20210327221754657" style="zoom: 33%;" />
+<img src="https://raw.githubusercontent.com/liangyimingcom/storage/master/uPic/image-20210327221754657.png" alt="image-20210327221754657" style="zoom: 40%;" />
 
 
 
