@@ -80,19 +80,38 @@ stateDiagram-v2
 
 ### 2）预测维护需求说明（下图）：
 
-![image-20210327234508644](/Users/yiming/Library/Application Support/typora-user-images/image-20210327234508644.png)
+![image-20210328000503896](https://raw.githubusercontent.com/liangyimingcom/storage/master/uPic/image-20210328000503896.png)
 
  
 
 ### 3）特征工程
 
-![image-20210327234915435](/Users/yiming/Library/Application Support/typora-user-images/image-20210327234915435.png) 
+![image-20210328000518141](https://raw.githubusercontent.com/liangyimingcom/storage/master/uPic/image-20210328000518141.png)
 
-**通过图表分析，已经找到的相关性列如下：（请参考源码）**
+通过图表分析，已经找到的相关性列如下：（请参考源码）
+
+
+
+### 4）使用“滑窗”方法，将特征工程后的时间序列数据集，通过滑动窗口转化为有监督学习数据集（如下），然后使用XGBoost做回归训练；
+
+![image-20210327235834004](https://raw.githubusercontent.com/liangyimingcom/storage/master/uPic/image-20210327235834004.png)
+
+
+
+### 5）预测结果
+
+1. 《预测性维护》需求场景验证成功，用户现有的数据集可以实现故障提前周期的预测；
+2. 数据预处理中《滑窗》次数越多，预测准确度越高。超过100个《滑窗》提高了预测模型的准确性。（100个滑窗的数据集，分别为5、10、20、30、40、50分钟的6个预测模型）
+3. 提前周期从5分钟到50分钟，预测《有故障》的准确率较高，召回率有待提高。 
+4. 在反复数据预处理和XGBoost调参训练后，使用Sagemaker将预测准确度AUC从0.79提高到0.93；
+
+![image-20210328000438018](https://raw.githubusercontent.com/liangyimingcom/storage/master/uPic/image-20210328000438018.png)
 
 
 
 </br>索取实验数据，请[点击](mailto:me@liangyiming.com)这里。<me@liangyiming.com>
+
+</br>
 
 
 
