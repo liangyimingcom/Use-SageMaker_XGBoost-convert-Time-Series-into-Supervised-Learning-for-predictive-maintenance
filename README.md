@@ -25,20 +25,25 @@
 2. 主要的数据分析方法是单变量阈值和基于物理的建模方法，尽管这些方法在检测特定故障类型和操作条件方面很有效，但它们通常会错过通过推导每台设备的多元关系而检测到的重要信息。
 3. 借助机器学习，可以提供从设备的历史数据中学习的数据驱动模型。主要挑战在于，ML的项目投资和工程师培训，实施这样的机器学习解决方案既耗时又昂贵。
 
-
+  </br>
 
 **AWS Sagemaker提供了一个简单有效的解决方案，就是使用Sagemaker+XGboost完成检测到异常的设备行为，实现《预测性维护》的场景需求。**
 
 1. 使用了“**滑窗**”方法进行数据集的重构，并配合XGBoost算法，**将多元时间序列数据集转换为监督学习问题（复杂问题转换为简单问题）；**
 2. 使用Sagemaker Studio各项功能（自动机器学习Autopilot、自动化的调参 Hyperparameter tuning jobs、多模型终端节点multi-model endpoints等）**加速XGBoost超参数优化的速度，有效提高模型准确度**；
-3. 使用Sagemaker Studio **完成数据预处理与特征工程**：1）探索相关性；2）缩小特征值范围；3）将海量数据分为几批进行预处理，以避免服务器内存溢出；4）数据清理，滑动窗口清除无效数据；5）过滤数据，解决正负样本不平衡的问题；
+3. 使用Sagemaker Studio **完成数据预处理与特征工程**：
+   - [ ] 1）探索相关性；
+   - [ ] 2）缩小特征值范围；
+   - [ ] 3）将海量数据分为几批进行预处理，以避免服务器内存溢出；
+   - [ ] 4）数据清理，滑动窗口清除无效数据；
+   - [ ] 5）过滤数据，解决正负样本不平衡的问题；
 4. 使用Sagemaker+XGboost训练了6个预测模型，分别覆盖提前5、10、20、30、40、50分钟，演示实验结果。
 
-
+</br>
 
 **首先您需要关注的是ML工作流程，是如何使用Amazon SageMaker和XGBoost完成典型ML工作流程中的每个步骤。 在此过程中，您将看到Amazon SageMaker如何使用各种功能来提高ML的效率并同时降低成本。**
 
-##### SageMaker + XGBoost的机器学习生命周期
+ **SageMaker + XGBoost的机器学习生命周期**
 
 ```mermaid
 stateDiagram-v2
@@ -61,11 +66,33 @@ stateDiagram-v2
 
 ## 二、需求分析与预测结果
 
-实验数据信息如下
+### 1）预测维护的实验数据集说明：
+
+- 文件名：121007060_1.csv 
+- 数据规模：180W行 含故障代的关联性分析与提起周期预测（数据）：
+- 数据说明：error code列为故障代码列，已经将设备故障代码（单独为一列）合并到设备状态记录中去，方便训练，请下图说明
+- 业务目标：对报错设备（error code字段）的关联性分析与提前故障周期预测；
+- 图例（重点）：请忽略红色标记的无用字段；
+
+![image-20210327234446954](https://raw.githubusercontent.com/liangyimingcom/storage/master/uPic/image-20210327234446954.png)
 
 
 
-索取实验数据，请[点击](mail:me@liangyiming.com)这里。
+### 2）预测维护需求说明（下图）：
+
+![image-20210327234508644](/Users/yiming/Library/Application Support/typora-user-images/image-20210327234508644.png)
+
+ 
+
+### 3）特征工程
+
+![image-20210327234915435](/Users/yiming/Library/Application Support/typora-user-images/image-20210327234915435.png) 
+
+**通过图表分析，已经找到的相关性列如下：（请参考源码）**
+
+
+
+</br>索取实验数据，请[点击](mailto:me@liangyiming.com)这里。<me@liangyiming.com>
 
 
 
@@ -75,14 +102,18 @@ ETL数据标注
 数据处理
 特征工程
 
+</br>[Step01_SageMaker_XGBoost-convert-Time-Series-into-Supervised-Learning.ipynb](https://github.com/liangyimingcom/Use-SageMaker_XGBoost-convert-Time-Series-into-Supervised-Learning-for-predictive-maintenance/blob/master/Step01_SageMaker_XGBoost-convert-Time-Series-into-Supervised-Learning.ipynb)
 
 
-## 四、SageMaker+XGBoost 训练与朝参数调优
+
+## 四、SageMaker+XGBoost 训练与超参数调优
 
 算法选择构建模型
 模型训练
 超参数优化(反复调参试错)
 评估Evaluation
+
+</br>[Step02_SageMaker_XGBoost_Tuningjob.ipynb](https://github.com/liangyimingcom/Use-SageMaker_XGBoost-convert-Time-Series-into-Supervised-Learning-for-predictive-maintenance/blob/master/Step02_SageMaker_XGBoost_Tuningjob.ipynb)
 
 
 
@@ -91,13 +122,17 @@ ETL数据标注
 部署模型线上推理
 持续监控数据收集
 
+[</br>Step03_SageMaker_XGBoost_predict_multimodel.ipynb](https://github.com/liangyimingcom/Use-SageMaker_XGBoost-convert-Time-Series-into-Supervised-Learning-for-predictive-maintenance/blob/master/Step03_SageMaker_XGBoost_predict_multimodel.ipynb)
+
+
+
 ## 六、结论
 
 
 
 ## 七、引用
 
-引用reference：
+引用reference：</br>
 
 1. 机器学习中梯度提升算法的简要介绍 https://machinelearningmastery.com/gentle-introduction-gradient-boosting-algorithm-machine-learning/
 2. 时间序列预测转化为监督学习问题 https://machinelearningmastery.com/time-series-forecasting-supervised-learning/
@@ -109,3 +144,4 @@ ETL数据标注
 
 ---
 
+ 
