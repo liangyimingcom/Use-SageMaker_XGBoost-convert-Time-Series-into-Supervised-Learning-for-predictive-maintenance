@@ -240,7 +240,7 @@ stateDiagram-v2
 
 上一章节我们讲了强大的滑动窗口方法，这是将时间序列问题转化为监督学习问题的基础。在数据预处理章节，我们来具体看一下滑动窗口的代码实现。
 
-<br/>**核心实现代码**
+**核心实现代码**
 
 ~~~python
 # 时间序列数据集转换为监督学习问题，将《多列时间序列数据》转换为《监督学习问题》Transform the timeseries data into supervised learning
@@ -268,7 +268,7 @@ def series_to_supervised(data, n_in=1, n_out=1, dropnan=True):
 
 ~~~
 
-<br/>**优化后的代码避免JupyterLab Instance内存溢出**
+**优化后的代码避免JupyterLab Instance内存溢出**
 
 时间序列数据集转换为监督学习的过程是在内存中完成的。实际操作中对有超过50列的50万行数据集，JupyterLab Instance内存占用非常轻松就超过100GB。
 
