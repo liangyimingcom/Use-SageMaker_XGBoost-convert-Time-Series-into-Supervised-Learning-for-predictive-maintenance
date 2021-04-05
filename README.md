@@ -46,7 +46,7 @@
 2. 主要的数据分析方法是单变量阈值和基于物理的建模方法，尽管这些方法在检测特定故障类型和操作条件方面很有效，但它们通常会错过"通过推导每台设备的多元关系"而检测到的重要信息。
 3. 借助机器学习，可以提供从设备的历史数据中学习的数据驱动模型。主要挑战在于，Machine Learning(ML)的项目投资和工程师培训，实施这样的机器学习解决方案既耗时又昂贵。
 
-  </br>
+  
 
 **AWS Sagemaker提供了一个简单有效的解决方案，就是使用Sagemaker+XGboost完成检测到异常的设备行为，实现《预测性维护》的场景需求**，本文内容覆盖了：
 
@@ -60,7 +60,7 @@
    - [ ] 5）过滤数据，解决正负样本不平衡的问题；
 4. 针对实验数据，使用Sagemaker+XGboost训练了6个预测模型，分别覆盖提前5、10、20、30、40、50分钟进行预测，演示预测结果结果。
 
-</br>
+
 
 **首先您需要关注的是ML工作流程。即如何使用Amazon SageMaker和XGBoost完成典型ML工作流程中的每个步骤。 在此过程中，您将看到Amazon SageMaker如何使用各种功能来提高ML的效率并同时降低成本。**
 
@@ -136,9 +136,9 @@ stateDiagram-v2
 
 
 
-</br>索取实验数据，请[点击](mailto:me@liangyiming.com)这里。
+索取实验数据，请[点击](mailto:me@liangyiming.com)这里。
 
-</br>
+
 
 ## 三、滑动窗口原理解析
 
@@ -179,7 +179,7 @@ stateDiagram-v2
 
 （表3-1）
 
-</br>
+
 
 ### 使用滑动窗口方法转换数据
 
@@ -195,7 +195,7 @@ stateDiagram-v2
 | 4    | 60     | 110    |
 | 5    | 70     | 120    |
 
-</br>让我们应用滑动窗口方法：
+让我们应用滑动窗口方法：
 
 | Value1 | Value2 | Value1 | Result(预测Value2) |
 | ------ | ------ | ------ | ------------------ |
@@ -212,13 +212,13 @@ stateDiagram-v2
 
 
 
-</br>让我们继续，实现多步预测：
+让我们继续，实现多步预测：
 
 对于预测性维护场景，真实的业务需求 - 预测多步比预测单步要有价值得多（如：提前1小时发现可能出现的故障，价值大于提前1分钟发现故障）。下面是使用滑动窗口方法转换变量数据进行多步预测的示例：
 
 ![image-20210328002702027](https://raw.githubusercontent.com/liangyimingcom/storage/master/uPic/image-20210328002702027.png)
 
-</br>
+
 
 ### 滑动窗口方法在实验数据集的验证结果：
 
@@ -288,7 +288,7 @@ def splite_series_to_supervised(data, n_in=1, splite_md=500000):
     return splited_series_to_supervised
 ```
 
-</br>
+
 
 ### 数据预处理
 
@@ -308,7 +308,7 @@ def clear_supervised(data, n_slidingwindow, n_totalcolumns):
     
 ~~~
 
-</br>
+
 
 ### 样本不均衡处理
 
@@ -342,7 +342,7 @@ def pickup_supervised_4train_imbalance(data, n_slidingwindow, n_totalcolumns, sp
 
 ~~~
 
-</br>
+
 
 ### 数据标注与特征工程
 
@@ -352,7 +352,7 @@ def pickup_supervised_4train_imbalance(data, n_slidingwindow, n_totalcolumns, sp
 
 [Step01_SageMaker_XGBoost-convert-Time-Series-into-Supervised-Learning.ipynb](https://github.com/liangyimingcom/Use-SageMaker_XGBoost-convert-Time-Series-into-Supervised-Learning-for-predictive-maintenance/blob/master/Step01_SageMaker_XGBoost-convert-Time-Series-into-Supervised-Learning.ipynb)
 
-</br>
+
 
 ## 五、SageMaker+XGBoost 训练与超参数调优
 
@@ -370,7 +370,7 @@ SageMaker中使用了开源的XGBoost machine learning (ML) library，实现了 
 
 ![image-20210405220827609](https://raw.githubusercontent.com/liangyimingcom/storage/master/uPic/image-20210405220827609.png)
 
-</br>
+
 
 ### 算法选择构建模型
 
@@ -423,7 +423,7 @@ xgb_script_mode_estimator = XGBoost(
 xgb_script_mode_estimator.fit({"train": train_input})
 ```
 
-</br>
+
 
 ### 超参数优化(反复调参试错)
 
@@ -441,11 +441,11 @@ xgb_script_mode_estimator.fit({"train": train_input})
 
 ![image-20210406003641094](https://raw.githubusercontent.com/liangyimingcom/storage/master/uPic/image-20210406003641094.png)
 
-</br>更多详情，请查看源代码：
+更多详情，请查看源代码：
 
 [Step02_SageMaker_XGBoost_Tuningjob.ipynb](https://github.com/liangyimingcom/Use-SageMaker_XGBoost-convert-Time-Series-into-Supervised-Learning-for-predictive-maintenance/blob/master/Step02_SageMaker_XGBoost_Tuningjob.ipynb)
 
-</br>
+
 
 ## 六、模型部署与使用
 
@@ -501,7 +501,7 @@ predictions = sagemaker_predict(model_data_to_numpy,xgb_predictor, rows=100)
 
 [Step02_SageMaker_XGBoost_Tuningjob.ipynb](https://github.com/liangyimingcom/Use-SageMaker_XGBoost-convert-Time-Series-into-Supervised-Learning-for-predictive-maintenance/blob/master/Step02_SageMaker_XGBoost_Tuningjob.ipynb)
 
-</br>
+
 
 ## 七、结论
 
@@ -513,7 +513,7 @@ predictions = sagemaker_predict(model_data_to_numpy,xgb_predictor, rows=100)
 4. 在反复数据预处理和XGBoost调参训练后，使用Sagemaker将预测准确度AUC从0.79提高到0.93；
 5. AUC指标表现良好，意味着模型质量较高；ROI曲线图也证明了AUC的结果；
 
-</br>**SageMaker 独有特性与功能**
+**SageMaker 独有特性与功能**
 
 使用SageMaker的内置的XGBoost算法，展示了SageMaker在ML的整个生命周期中的各项功能。Amazon SageMaker提供了一连贯的功能，帮助数据科学家高效的、低成本实现端到端，从模型构建到生成环境部署的各种工作。这些功能包括全托管Jupyter notebook 用来构建模型，后续的自动调参、模型构建、部署、负载均衡、弹性伸缩直达生产环境。在自动训练和自动调参的过程中可以使用spot training大大节省训练成本。
 
@@ -521,7 +521,7 @@ predictions = sagemaker_predict(model_data_to_numpy,xgb_predictor, rows=100)
 
 ![](https://raw.githubusercontent.com/liangyimingcom/storage/master/uPic/image-20210405223223554.png)
 
-</br>
+
 
 ## 八、引用reference
 
@@ -531,7 +531,7 @@ predictions = sagemaker_predict(model_data_to_numpy,xgb_predictor, rows=100)
 4. How To Backtest Machine Learning Models for Time Series Forecasting如何回测时间序列预测的机器学习模型 https://machinelearningmastery.com/backtest-machine-learning-models-time-series-forecasting/
 5. How to Use XGBoost for Time Series Forecasting https://machinelearningmastery.com/xgboost-for-time-series-forecasting/
 
-</br>
+
 
 ---
 
