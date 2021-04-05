@@ -8,11 +8,11 @@
 目录 
 一、前言
 二、需求分析与预测结果
-  1）预测维护的实验数据集
-  2）预测维护需求说明
-  3）特征工程
-  4）使用“滑窗”方法，将特征工程后的时间序列数据集
-  5）预测结果
+    1）预测维护的实验数据集
+    2）预测维护需求说明
+    3）特征工程
+    4）使用“滑窗”方法，将特征工程后的时间序列数据集
+    5）预测结果
 三、滑动窗口原理解析
     时间序列问题的类型
     实验数据集的类型：
@@ -24,9 +24,16 @@
     样本不均衡处理
     数据标注与特征工程
 五、SageMaker+XGBoost 训练与超参数调优
+    什么是XGBoost？
+    算法选择构建模型
+    模型训练
+    超参数优化(反复调参试错)
+    评估Evaluation 与 模型推理
 六、模型部署与使用
+    部署模型线上推理
+    模型评估 与 模型推理（预测效果展示）
 七、结论
-八、引用
+八、引用reference
 ```
 
 
@@ -133,8 +140,6 @@ stateDiagram-v2
 
 </br>
 
-
-
 ## 三、滑动窗口原理解析
 
 滑动窗口方法，是使用先前的时间步长预测下一个时间步长，在统计资料中它也称为滞后法。使用滑动窗口方法，可以将《多元时间序列数据集》转换为《监督学习问题》，应该怎么实现呢？ 
@@ -213,7 +218,7 @@ stateDiagram-v2
 
 ![image-20210328002702027](https://raw.githubusercontent.com/liangyimingcom/storage/master/uPic/image-20210328002702027.png)
 
-
+</br>
 
 ### 滑动窗口方法在实验数据集的验证结果：
 
@@ -227,7 +232,7 @@ stateDiagram-v2
 
 
 
-</br>
+
 
 ## 四、数据预处理与特征工程
 
@@ -283,7 +288,7 @@ def splite_series_to_supervised(data, n_in=1, splite_md=500000):
     return splited_series_to_supervised
 ```
 
-
+</br>
 
 ### 数据预处理
 
@@ -303,7 +308,7 @@ def clear_supervised(data, n_slidingwindow, n_totalcolumns):
     
 ~~~
 
-
+</br>
 
 ### 样本不均衡处理
 
@@ -337,44 +342,170 @@ def pickup_supervised_4train_imbalance(data, n_slidingwindow, n_totalcolumns, sp
 
 ~~~
 
-
+</br>
 
 ### 数据标注与特征工程
 
 超过70％的工作量是数据预处理与特征工程相关工作，这里的难点有：1）探索相关性；2）缩小特征值范围；3）将海量数据分为几批进行预处理，以避免服务器内存溢出；4）数据清理，滑动窗口清除无效数据；5）过滤数据，解决正负样本不平衡的问题；
 
-更多详情，请查看源代码：
+**更多详情，请查看源代码：**
 
-</br>[Step01_SageMaker_XGBoost-convert-Time-Series-into-Supervised-Learning.ipynb](https://github.com/liangyimingcom/Use-SageMaker_XGBoost-convert-Time-Series-into-Supervised-Learning-for-predictive-maintenance/blob/master/Step01_SageMaker_XGBoost-convert-Time-Series-into-Supervised-Learning.ipynb)
+[Step01_SageMaker_XGBoost-convert-Time-Series-into-Supervised-Learning.ipynb](https://github.com/liangyimingcom/Use-SageMaker_XGBoost-convert-Time-Series-into-Supervised-Learning-for-predictive-maintenance/blob/master/Step01_SageMaker_XGBoost-convert-Time-Series-into-Supervised-Learning.ipynb)
 
-
+</br>
 
 ## 五、SageMaker+XGBoost 训练与超参数调优
 
-什么是GBoost？
+### 什么是XGBoost？
+
 如果将机器学习问题分为传统机器学习和深度学习，那么XGBoost是在传统机器学习竞赛中获得最多奖项的算法。 XGBoost的全名是Extreme Gradient Boosting，它是梯度增强的开源实现。 梯度提升通过决策树将几个弱模型（集合）聚集在一起，以形成最终模型。 此过程是一个连续且迭代的优化过程。 通过计算损失函数的梯度可以优化每次迭代的方向 ，然后采用梯度下降法连续减小损失函数，得到最终模型。
 
+解决三个主要的ML问题:
+
+1. 分类（classification）
+2. 回归（regression）
+3. 排名
+
+SageMaker中使用了开源的XGBoost machine learning (ML) library，实现了 高度的可扩展性和分布式，可在多台计算节点上使用海量数据用于训练。SageMaker XGBoost 容器的优势有：
+
+![image-20210405220827609](https://raw.githubusercontent.com/liangyimingcom/storage/master/uPic/image-20210405220827609.png)
+
+</br>
+
+### 算法选择构建模型
+
+综上所述，最终采用算法：XGBoost （sagemaker内置算法），原因：
+
+1. 开箱即用、听话，出活。
+2. 适合做项目，短、平、快！
+
+作为Amazon SageMaker XGBoost的用户，现在您可以在创建训练作业时指定新版本，从而轻松使用其提供的新功能与各项改进。详见以下代码：
+
+```python
+from sagemaker.amazon.amazon_estimator import get_image_uri
+container = get_image_uri(region, 'xgboost', '1.0-1')
+
+estimator = sagemaker.estimator.Estimator(container, 
+                                          role, 
+                                          hyperparameters=hyperparameters,
+                                          train_instance_count=1, 
+                                          train_instance_type='ml.m5.2xlarge', 
+                                          )
+
+estimator.fit(training_data)
+```
 
 
-算法选择构建模型
-模型训练
-超参数优化(反复调参试错)
-评估Evaluation
 
-</br>[Step02_SageMaker_XGBoost_Tuningjob.ipynb](https://github.com/liangyimingcom/Use-SageMaker_XGBoost-convert-Time-Series-into-Supervised-Learning-for-predictive-maintenance/blob/master/Step02_SageMaker_XGBoost_Tuningjob.ipynb)
+### 模型训练
 
+使用 SageMaker XGBoost 估计器进行训练。具体请参见以下代码：
 
+```python
+from sagemaker.session import s3_input
+from sagemaker.xgboost.estimator import XGBoost
+
+xgb_script_mode_estimator = XGBoost(
+    entry_point="abalone.py",
+    hyperparameters=hyperparameters,
+    image_name=container,
+    role=role, 
+    train_instance_count=1,
+    train_instance_type="ml.m5.2xlarge",
+    framework_version="1.0-1",
+    output_path="s3://{}/{}/{}/output".format(bucket, prefix, "xgboost-script-mode"),
+    train_use_spot_instances=train_use_spot_instances,
+    train_max_run=train_max_run,
+    train_max_wait=train_max_wait,
+    checkpoint_s3_uri=checkpoint_s3_uri
+)
+
+xgb_script_mode_estimator.fit({"train": train_input})
+```
+
+</br>
+
+### 超参数优化(反复调参试错)
+
+我们已经准备好数据集，就可以训练模型了。在执行此操作之前，要注意的一件事是存在称为“超参数”的算法设置，这些设置可能会严重影响训练后的模型的准确度。例如，XGBoost算法具有几十个超参数，我们需要为这些超参数选择正确的值，以便获得所需的模型训练结果。由于超参数设置复杂并导致了准确度的变化，因此不可能直接得到最佳超参数设置，SageMaker的超参数优化（Hyperparameter_Tuning），以自动的方法搜索到最佳超参数设置。
+
+我们将使用SageMaker Hyperparameter Tuning来有效地自动执行搜索最佳参数的过程。具体来说，对于超参数，我们可以指定每个超参数指定一个范围或可能值的列表。 SageMaker超参数优化将自动启动具有不同超参数设置的多个训练作业，基于预定义的“结果指标evaluation metric”评估那些训练作业的结果，并根据先前的结果为以后的尝试选择超参数设置。对于每个超参数调整作业，我们将给它一个预算（最大训练作业数），并且在执行完许多训练作业后该预算将完成。
+
+<img src="https://raw.githubusercontent.com/liangyimingcom/storage/master/uPic/image-20210405223346553.png" alt="image-20210405223346553" style="zoom:50%;" />
+
+<img src="https://raw.githubusercontent.com/liangyimingcom/storage/master/uPic/image-20210405223357020.png" alt="image-20210405223357020" style="zoom:50%;" /><img src="https://raw.githubusercontent.com/liangyimingcom/storage/master/uPic/image-20210405223405347.png" alt="image-20210405223405347" style="zoom:50%;" />
+
+该过程的目的是得到一个最佳的超参配比，使得评估指标在validation set上的效果最优。这里的评估指标就是mae，数值越小越优。
+
+### 评估Evaluation 与 模型推理
+
+![image-20210406003641094](https://raw.githubusercontent.com/liangyimingcom/storage/master/uPic/image-20210406003641094.png)
+
+</br>更多详情，请查看源代码：
+
+[Step02_SageMaker_XGBoost_Tuningjob.ipynb](https://github.com/liangyimingcom/Use-SageMaker_XGBoost-convert-Time-Series-into-Supervised-Learning-for-predictive-maintenance/blob/master/Step02_SageMaker_XGBoost_Tuningjob.ipynb)
+
+</br>
 
 ## 六、模型部署与使用
 
-部署模型线上推理
-持续监控数据收集
+### 部署模型线上推理
 
-[</br>Step03_SageMaker_XGBoost_predict_multimodel.ipynb](https://github.com/liangyimingcom/Use-SageMaker_XGBoost-convert-Time-Series-into-Supervised-Learning-for-predictive-maintenance/blob/master/Step03_SageMaker_XGBoost_predict_multimodel.ipynb)
+![image-20210405230902960](https://raw.githubusercontent.com/liangyimingcom/storage/master/uPic/image-20210405230902960.png)
+
+![image-20210405231402322](https://raw.githubusercontent.com/liangyimingcom/storage/master/uPic/image-20210405231402322.png)
+
+![image-20210405231448328](https://raw.githubusercontent.com/liangyimingcom/storage/master/uPic/image-20210405231448328.png)
 
 
+
+### 模型评估 与 模型推理（预测效果展示）
+
+现在我们要使用上图中的部署好的endpoint来做推理，代码如下：
+
+~~~python
+#预测 1：准备sagemaker endpoint
+xgb_predictor = sagemaker.predictor.RealTimePredictor(endpoint=endpoint_name)
+
+#from sagemaker.predictor import csv_serializer
+from sagemaker.predictor import csv_serializer, json_deserializer
+xgb_predictor.content_type = 'text/csv'
+xgb_predictor.serializer = csv_serializer
+xgb_predictor.deserializer = None
+
+# inference预测处理：传入modeldata数据和 sagemaker inference handle，获得预测结果
+def sagemaker_predict(data, xgb_predictor, rows=100):
+    split_array = np.array_split(data, int(data.shape[0] / float(rows) + 1))    
+    predictions = ''
+    for array in split_array:
+        split_result = xgb_predictor.predict(data=array).decode('utf-8')
+        #print(split_result)
+        split_result = str.strip(split_result, '[]') # 去掉多余的前后[]符号
+        #split_result=split_result.replace(' ', '')
+        #print('res='+split_result)
+             
+        predictions = ','.join([predictions, split_result])
+            
+    #print(predictions)
+    #return np.fromstring(predictions[1:], sep=',', dtype=np.float64) 
+    return np.fromstring(predictions[1:], sep=',') 
+  
+#预测 2：预测并获得预测结果
+model_data_to_numpy = model_data.to_numpy()[:, 1:] #转换所有的行，从第一列开始（忽略0列）
+
+#调用函数
+predictions = sagemaker_predict(model_data_to_numpy,xgb_predictor, rows=100)
+~~~
+
+**更多详情，请查看源代码：**
+
+[Step02_SageMaker_XGBoost_Tuningjob.ipynb](https://github.com/liangyimingcom/Use-SageMaker_XGBoost-convert-Time-Series-into-Supervised-Learning-for-predictive-maintenance/blob/master/Step02_SageMaker_XGBoost_Tuningjob.ipynb)
+
+</br>
 
 ## 七、结论
+
+**预测性维护需求场景验证成功**
 
 1. 《预测性维护》需求场景验证成功，用户现有的数据集可以实现故障提前周期的预测；
 2. 数据预处理中《滑窗》次数越多，预测准确度越高。超过100个《滑窗》提高了预测模型的准确性。（100个滑窗的数据集，分别为5、10、20、30、40、50分钟的6个预测模型）
@@ -382,11 +513,17 @@ def pickup_supervised_4train_imbalance(data, n_slidingwindow, n_totalcolumns, sp
 4. 在反复数据预处理和XGBoost调参训练后，使用Sagemaker将预测准确度AUC从0.79提高到0.93；
 5. AUC指标表现良好，意味着模型质量较高；ROI曲线图也证明了AUC的结果；
 
+</br>**SageMaker 独有特性与功能**
+
+使用SageMaker的内置的XGBoost算法，展示了SageMaker在ML的整个生命周期中的各项功能。Amazon SageMaker提供了一连贯的功能，帮助数据科学家高效的、低成本实现端到端，从模型构建到生成环境部署的各种工作。这些功能包括全托管Jupyter notebook 用来构建模型，后续的自动调参、模型构建、部署、负载均衡、弹性伸缩直达生产环境。在自动训练和自动调参的过程中可以使用spot training大大节省训练成本。
+
+这些功能，大幅度降低了企业使用ML所需要的资金门槛和人才门槛，是当今企业通过ML来提升竞争力的强有力的平台。
+
+![](https://raw.githubusercontent.com/liangyimingcom/storage/master/uPic/image-20210405223223554.png)
+
 </br>
 
-## 八、引用
-
-引用reference：</br>
+## 八、引用reference
 
 1. 机器学习中梯度提升算法的简要介绍 https://machinelearningmastery.com/gentle-introduction-gradient-boosting-algorithm-machine-learning/
 2. 时间序列预测转化为监督学习问题 https://machinelearningmastery.com/time-series-forecasting-supervised-learning/
@@ -394,7 +531,7 @@ def pickup_supervised_4train_imbalance(data, n_slidingwindow, n_totalcolumns, sp
 4. How To Backtest Machine Learning Models for Time Series Forecasting如何回测时间序列预测的机器学习模型 https://machinelearningmastery.com/backtest-machine-learning-models-time-series-forecasting/
 5. How to Use XGBoost for Time Series Forecasting https://machinelearningmastery.com/xgboost-for-time-series-forecasting/
 
-
+</br>
 
 ---
 
