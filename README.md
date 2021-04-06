@@ -240,7 +240,7 @@ stateDiagram-v2
 
 上一章节我们讲了强大的滑动窗口方法，这是将时间序列问题转化为监督学习问题的基础。在数据预处理章节，我们来具体看一下滑动窗口的代码实现。
 
-**核心实现代码**
+**核心实现代码**：
 
 ~~~python
 # 时间序列数据集转换为监督学习问题，将《多列时间序列数据》转换为《监督学习问题》Transform the timeseries data into supervised learning
@@ -274,7 +274,7 @@ def series_to_supervised(data, n_in=1, n_out=1, dropnan=True):
 
 虽然SageMaker Studio支持随时申请更大的Instance（如ml.m5.24xlarge(96c/384g)）的Instance服务器来完成滑窗这个操作，但这显然成本过高，并不划算。
 
-通过代码的优化，完成数据集进行分段滑窗，就可以很好的解决内存溢出的问题。实际测试过程中，此段代码可以在64G内存配置Instance（如ml.m5.4xlarge(16c/64g)）的实现120W行60列的测试数据集全部滑窗操作。
+通过代码的优化，完成数据集进行**分段滑窗**，就可以很好的**解决内存溢出**的问题。实际测试过程中，此段代码可以在64G内存配置Instance（如ml.m5.4xlarge(16c/64g)）的实现120W行60列的测试数据集全部滑窗操作。
 
 ```python
 # 对数据集进行分段滑窗，从而避免内存溢出；
@@ -312,9 +312,17 @@ def clear_supervised(data, n_slidingwindow, n_totalcolumns):
 
 ### 样本不均衡处理
 
-由于预测性维护的业务特性，导致了故障样本占整体数据样本的比例极低，实验数据中，故障样本比例大约是全部数据集合的万分之五。这是可以理解的，因为实际业务场景中，如果一个设备总是处于故障中，用户早就退货处理了。但这么悬殊的样本会大幅度降低预测准确度，对于XGBoost算法，可以使用imblearn库与scale_pos_weight来解决了样本不均衡问题，从而提升了预测性维护模型的准确度。 
+由于预测性维护的业务特性，导致了**故障样本**占整体数据样本的**比例极低**。实验数据中，故障样本比例大约是全部数据集合的万分之五。这是符合业务真实情况的，也是可以理解的。因为实际业务场景中，如果一个设备总是处于故障中，用户早就退货处理了，没有机会能让你收集到高比例的故障数据。不管如何，这么悬殊的样本会大幅度降低预测模型的准确度。对于XGBoost算法，可以使用imblearn库与scale_pos_weight来解决了样本不均衡问题，从而提升了预测性维护模型的准确度。 
 
-本次实验，因为了解用户的业务情况，所以通过了更简单的思路解决了样本不均衡问题。即数据集以时间序列顺向排序，在故障发生记录点向前投影取范围，从而覆盖故障发生前的各种阈值的变化情况。核心代码如下：
+本次实验数据，因为在前期调研中深入的理解了用户业务情况，所以通过了更简单的思路解决了样本不均衡问题。即数据集以时间序列顺向排序，**以故障发生记录点为原点 - 向过去的时间序列投影进行取值**，从而覆盖故障发生前的各种阈值的变化情况。
+
+**截图说明：以故障发生记录点为原点 - 向过去的时间序列投影进行取值，从而覆盖故障发生前的各种阈值的变化情况。**
+
+![image-20210406102410526](https://raw.githubusercontent.com/liangyimingcom/storage/master/uPic/image-20210406102410526.png)
+
+
+
+实现的核心代码如下：
 
 ~~~python
 # 滑窗后处理：正确滑窗，应该是 “有错和无错，各自一条”； 同时适用于pd.sample随机
@@ -346,7 +354,7 @@ def pickup_supervised_4train_imbalance(data, n_slidingwindow, n_totalcolumns, sp
 
 ### 数据标注与特征工程
 
-超过70％的工作量是数据预处理与特征工程相关工作，这里的难点有：1）探索相关性；2）缩小特征值范围；3）将海量数据分为几批进行预处理，以避免服务器内存溢出；4）数据清理，滑动窗口清除无效数据；5）过滤数据，解决正负样本不平衡的问题；
+**超过70％的工作量**是数据预处理与特征工程相关工作，这里的难点有：1）探索相关性；2）缩小特征值范围；3）将海量数据分为几批进行预处理，以避免服务器内存溢出；4）数据清理，滑动窗口清除无效数据；5）过滤数据，解决正负样本不平衡的问题；
 
 **更多详情，请查看源代码：**
 
@@ -358,9 +366,9 @@ def pickup_supervised_4train_imbalance(data, n_slidingwindow, n_totalcolumns, sp
 
 ### 什么是XGBoost？
 
-如果将机器学习问题分为传统机器学习和深度学习，那么XGBoost是在传统机器学习竞赛中获得最多奖项的算法。 XGBoost的全名是Extreme Gradient Boosting，它是梯度增强的开源实现。 梯度提升通过决策树将几个弱模型（集合）聚集在一起，以形成最终模型。 此过程是一个连续且迭代的优化过程。 通过计算损失函数的梯度可以优化每次迭代的方向 ，然后采用梯度下降法连续减小损失函数，得到最终模型。
+如果将机器学习问题分为传统机器学习和深度学习，那么XGBoost是在**传统机器学习**竞赛中获得最多奖项的算法。 XGBoost的全名是Extreme Gradient Boosting，它是梯度增强的开源实现。 梯度提升通过决策树将几个弱模型（集合）聚集在一起，以形成最终模型。 此过程是一个连续且迭代的优化过程。 通过计算损失函数的梯度可以优化每次迭代的方向 ，然后采用梯度下降法连续减小损失函数，得到最终模型。
 
-解决三个主要的ML问题:
+**解决三个主要的ML问题:**
 
 1. 分类（classification）
 2. 回归（regression）
@@ -374,12 +382,12 @@ SageMaker中使用了开源的XGBoost machine learning (ML) library，实现了 
 
 ### 算法选择构建模型
 
-综上所述，最终采用算法：XGBoost （sagemaker内置算法），原因：
+综上所述，这里采用算法是：XGBoost  - Sagemaker的内置算法，主要原因：
 
 1. 开箱即用、听话，出活。
 2. 适合做项目，短、平、快！
 
-作为Amazon SageMaker XGBoost的用户，现在您可以在创建训练作业时指定新版本，从而轻松使用其提供的新功能与各项改进。详见以下代码：
+作为 SageMaker XGBoost的用户，现在您可以在创建训练作业时指定新版本，从而轻松使用其提供的新功能与各项改进。详见以下代码：
 
 ```python
 from sagemaker.amazon.amazon_estimator import get_image_uri
@@ -399,7 +407,7 @@ estimator.fit(training_data)
 
 ### 模型训练
 
-使用 SageMaker XGBoost 估计器进行训练。具体请参见以下代码：
+使用 SageMaker XGBoost 进行训练。具体请参见以下代码：
 
 ```python
 from sagemaker.session import s3_input
@@ -427,21 +435,29 @@ xgb_script_mode_estimator.fit({"train": train_input})
 
 ### 超参数优化(反复调参试错)
 
-我们已经准备好数据集，就可以训练模型了。在执行此操作之前，要注意的一件事是存在称为“超参数”的算法设置，这些设置可能会严重影响训练后的模型的准确度。例如，XGBoost算法具有几十个超参数，我们需要为这些超参数选择正确的值，以便获得所需的模型训练结果。由于超参数设置复杂并导致了准确度的变化，因此不可能直接得到最佳超参数设置，SageMaker的超参数优化（Hyperparameter_Tuning），以自动的方法搜索到最佳超参数设置。
+我们已经准备好数据集，就可以训练模型了。在执行此操作之前，需要进行“超参数”的配置，这些配置参数可能会严重影响训练后的模型的准确度。例如，XGBoost算法具有几十个超参数，需要为这些超参数选择正确的值，才能获得理想的模型训练结果。由于超参数设置非常复杂（穷举矩阵很大）并导致了模型准确度的差别，因此通常无法直接获得最佳超参数的配置。而SageMaker的超参数优化（Hyperparameter_Tuning）非常好的解决了这个问题，SageMaker的超参数优化采用了自动的方法去搜索到了最佳超参数配置。
 
-我们将使用SageMaker Hyperparameter Tuning来有效地自动执行搜索最佳参数的过程。具体来说，对于超参数，我们可以指定每个超参数指定一个范围或可能值的列表。 SageMaker超参数优化将自动启动具有不同超参数设置的多个训练作业，基于预定义的“结果指标evaluation metric”评估那些训练作业的结果，并根据先前的结果为以后的尝试选择超参数设置。对于每个超参数调整作业，我们将给它一个预算（最大训练作业数），并且在执行完许多训练作业后该预算将完成。
+如何、将使用SageMaker Hyperparameter Tuning来有效地自动执行搜索最佳参数？具体来说，对于超参数，我们可以指定每个超参数指定一个范围或可能值的列表（给出穷举矩阵的范围）。 SageMaker超参数优化将自动启动具有不同超参数设置的多个训练作业，基于预定义的“结果指标evaluation metric”评估那些训练作业的结果，并根据先前的结果为以后的尝试选择超参数设置。对于每个超参数调整作业，我们将给它一个预算（最大训练作业数），并且在执行完许多训练作业后（在预算内）完成。
 
 <img src="https://raw.githubusercontent.com/liangyimingcom/storage/master/uPic/image-20210405223346553.png" alt="image-20210405223346553" style="zoom:50%;" />
 
-<img src="https://raw.githubusercontent.com/liangyimingcom/storage/master/uPic/image-20210405223357020.png" alt="image-20210405223357020" style="zoom:50%;" /><img src="https://raw.githubusercontent.com/liangyimingcom/storage/master/uPic/image-20210405223405347.png" alt="image-20210405223405347" style="zoom:50%;" />
+<img src="https://raw.githubusercontent.com/liangyimingcom/storage/master/uPic/image-20210405223357020.png" alt="image-20210405223357020" style="zoom:50%;" />
+
+评估指标是mae，数值越小越优：
+
+<img src="https://raw.githubusercontent.com/liangyimingcom/storage/master/uPic/image-20210405223405347.png" alt="image-20210405223405347" style="zoom:50%;" />
 
 该过程的目的是得到一个最佳的超参配比，使得评估指标在validation set上的效果最优。这里的评估指标就是mae，数值越小越优。
+
+
+
+
 
 ### 评估Evaluation 与 模型推理
 
 ![image-20210406003641094](https://raw.githubusercontent.com/liangyimingcom/storage/master/uPic/image-20210406003641094.png)
 
-更多详情，请查看源代码：
+**更多详情，请查看源代码：**
 
 [Step02_SageMaker_XGBoost_Tuningjob.ipynb](https://github.com/liangyimingcom/Use-SageMaker_XGBoost-convert-Time-Series-into-Supervised-Learning-for-predictive-maintenance/blob/master/Step02_SageMaker_XGBoost_Tuningjob.ipynb)
 
@@ -450,6 +466,8 @@ xgb_script_mode_estimator.fit({"train": train_input})
 ## 六、模型部署与使用
 
 ### 部署模型线上推理
+
+为了更好的理解，超参数调优后的模型部署流程，这里采用了UI方式来部署模型。当然这部分可以通过代码实现。
 
 ![image-20210405230902960](https://raw.githubusercontent.com/liangyimingcom/storage/master/uPic/image-20210405230902960.png)
 
